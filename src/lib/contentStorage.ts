@@ -11,7 +11,7 @@ export function loadBlogPosts(): BlogPost[] {
 
   try {
     const parsed = JSON.parse(raw) as BlogPost[];
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : blogPosts;
+    return Array.isArray(parsed) ? parsed : blogPosts;
   } catch {
     return blogPosts;
   }
@@ -29,7 +29,7 @@ export function loadProjects(): Project[] {
 
   try {
     const parsed = JSON.parse(raw) as Project[];
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : projects;
+    return Array.isArray(parsed) ? parsed : projects;
   } catch {
     return projects;
   }
