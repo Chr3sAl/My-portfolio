@@ -1,19 +1,35 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import BottomNav from "@/components/BottomNav";
 import Navbar from "@/components/Navbar";
 import PageWrapper from "@/components/PageWrapper";
-import { blogCategories, blogPosts } from "@/data/blogPosts";
+import { BlogPost, blogPosts } from "@/data/blogPosts";
+import { loadBlogPosts } from "@/lib/contentStorage";
 
 export default function BlogPage() {
-  const featuredPost = blogPosts.find((post) => post.featured) ?? blogPosts[0];
-  const trendingPosts = blogPosts.slice(0, 4);
-  const listPosts = blogPosts.filter((post) => post.slug !== featuredPost.slug);
+  const [posts, setPosts] = useState<BlogPost[]>(blogPosts);
 
-  const categoryCounts = blogCategories.map((category) => ({
+  useEffect(() => {
+    setPosts(loadBlogPosts());
+  }, []);
+
+  const featuredPost = useMemo(
+    () => posts.find((post) => post.featured) ?? posts[0],
+    [posts],
+  );
+  const trendingPosts = posts.slice(0, 4);
+  const listPosts = posts.filter((post) => post.slug !== featuredPost?.slug);
+
+  const categories = Array.from(new Set(posts.map((post) => post.category)));
+  const categoryCounts = categories.map((category) => ({
     category,
-    count: blogPosts.filter((post) => post.category === category).length,
+    count: posts.filter((post) => post.category === category).length,
   }));
+
+  if (!featuredPost) return null;
 
   return (
     <PageWrapper>
@@ -38,7 +54,7 @@ export default function BlogPage() {
                   height={200}
                   className="h-28 w-full rounded-lg object-cover"
                 />
-                <h3 className="mt-2 line-clamp-2 text-sm font-semibold text-slate-800 group-hover:text-sky-600">
+                <h3 className="mt-2 text-sm font-semibold text-slate-800 group-hover:text-sky-600">
                   {post.title}
                 </h3>
                 <p className="mt-1 text-xs text-slate-500">{post.date}</p>
@@ -104,15 +120,6 @@ export default function BlogPage() {
                     <span className="font-semibold text-slate-800">{item.count}</span>
                   </li>
                 ))}
-              </ul>
-            </div>
-
-            <div className="rounded-2xl bg-white/90 p-5 shadow-sm">
-              <h3 className="text-lg font-semibold text-slate-900">Follow Us</h3>
-              <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                <li className="flex justify-between"><span>GitHub</span><span>Portfolio</span></li>
-                <li className="flex justify-between"><span>X</span><span>@christian</span></li>
-                <li className="flex justify-between"><span>LinkedIn</span><span>Student Dev</span></li>
               </ul>
             </div>
           </aside>

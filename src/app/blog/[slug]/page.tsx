@@ -1,25 +1,41 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import BottomNav from "@/components/BottomNav";
 import Navbar from "@/components/Navbar";
 import PageWrapper from "@/components/PageWrapper";
-import { blogPosts } from "@/data/blogPosts";
+import { BlogPost, blogPosts } from "@/data/blogPosts";
+import { loadBlogPosts } from "@/lib/contentStorage";
 
-type BlogPostPageProps = {
-  params: Promise<{ slug: string }>;
-};
+export default function BlogPostPage() {
+  const params = useParams<{ slug: string }>();
+  const [posts, setPosts] = useState<BlogPost[]>(blogPosts);
 
-export function generateStaticParams() {
-  return blogPosts.map((post) => ({ slug: post.slug }));
-}
+  useEffect(() => {
+    setPosts(loadBlogPosts());
+  }, []);
 
-export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = await params;
-  const post = blogPosts.find((item) => item.slug === slug);
+  const post = useMemo(
+    () => posts.find((item) => item.slug === params.slug),
+    [posts, params.slug],
+  );
 
   if (!post) {
-    notFound();
+    return (
+      <PageWrapper>
+        <Navbar />
+        <section className="px-6 py-16 md:px-10">
+          <h1 className="text-3xl font-bold text-slate-900">Post not found</h1>
+          <Link href="/blog" className="mt-4 inline-block text-sky-600 hover:underline">
+            Back to blog
+          </Link>
+        </section>
+        <BottomNav />
+      </PageWrapper>
+    );
   }
 
   return (
