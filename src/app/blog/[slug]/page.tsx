@@ -15,7 +15,7 @@ export default function BlogPostPage() {
   const [posts, setPosts] = useState<BlogPost[]>(blogPosts);
 
   useEffect(() => {
-    setPosts(loadBlogPosts());
+    loadBlogPosts().then(setPosts).catch(() => setPosts(blogPosts));
   }, []);
 
   const post = useMemo(

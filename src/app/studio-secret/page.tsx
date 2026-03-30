@@ -7,10 +7,8 @@ import PageWrapper from "@/components/PageWrapper";
 import { BlogPost, blogCategories, blogPosts } from "@/data/blogPosts";
 import { Project, projects } from "@/data/projects";
 import {
-  loadBlogPosts,
-  loadProjects,
-  saveBlogPosts,
-  saveProjects,
+  loadContent,
+  saveContent,
 } from "@/lib/contentStorage";
 
 const SECRET_PASSCODE = "ctoky-studio";
@@ -101,8 +99,15 @@ export default function StudioSecretPage() {
   const [techListInput, setTechListInput] = useState("");
 
   useEffect(() => {
-    setPostList(loadBlogPosts());
-    setProjectList(loadProjects());
+    loadContent()
+      .then(({ posts, projects: savedProjects }) => {
+        setPostList(posts);
+        setProjectList(savedProjects);
+      })
+      .catch(() => {
+        setPostList(blogPosts);
+        setProjectList(projects);
+      });
   }, []);
 
   const postCount = useMemo(() => postList.length, [postList]);
@@ -118,7 +123,15 @@ export default function StudioSecretPage() {
     alert("Wrong passcode");
   };
 
-  const upsertPost = (e: FormEvent) => {
+  const persistContent = async (nextPosts: BlogPost[], nextProjects: Project[]) => {
+    try {
+      await saveContent({ posts: nextPosts, projects: nextProjects });
+    } catch {
+      alert("Unable to save. Please try again.");
+    }
+  };
+
+  const upsertPost = async (e: FormEvent) => {
     e.preventDefault();
     const slug = postForm.slug || slugify(postForm.title);
     if (!slug || !postForm.title || !postForm.content) return;
@@ -129,12 +142,12 @@ export default function StudioSecretPage() {
       : [item, ...postList.filter((post) => post.slug !== slug)];
 
     setPostList(next);
-    saveBlogPosts(next);
+    await persistContent(next, projectList);
     setPostForm(defaultPost);
     setEditingPostSlug(null);
   };
 
-  const upsertProject = (e: FormEvent) => {
+  const upsertProject = async (e: FormEvent) => {
     e.preventDefault();
     const slug = projectForm.slug || slugify(projectForm.title);
     if (!slug || !projectForm.title || !projectForm.shortDescription) return;
@@ -161,7 +174,7 @@ export default function StudioSecretPage() {
       : [item, ...projectList.filter((project) => project.slug !== slug)];
 
     setProjectList(next);
-    saveProjects(next);
+    await persistContent(postList, next);
     setProjectForm(defaultProject);
     setTechListInput("");
     setEditingProjectSlug(null);
@@ -180,20 +193,20 @@ export default function StudioSecretPage() {
     setTab("projects");
   };
 
-  const deletePost = (slug: string) => {
+  const deletePost = async (slug: string) => {
     const next = postList.filter((post) => post.slug !== slug);
     setPostList(next);
-    saveBlogPosts(next);
+    await persistContent(next, projectList);
     if (editingPostSlug === slug) {
       setEditingPostSlug(null);
       setPostForm(defaultPost);
     }
   };
 
-  const deleteProject = (slug: string) => {
+  const deleteProject = async (slug: string) => {
     const next = projectList.filter((project) => project.slug !== slug);
     setProjectList(next);
-    saveProjects(next);
+    await persistContent(postList, next);
     if (editingProjectSlug === slug) {
       setEditingProjectSlug(null);
       setProjectForm(defaultProject);
@@ -258,6 +271,9 @@ export default function StudioSecretPage() {
           <p className="mt-2 text-slate-600">
             Create, edit, and delete content without changing code.
           </p>
+          <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+            Content saved here is published through your server API and should appear on all devices viewing this site.
+          </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl bg-slate-900 p-4 text-white">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-300">Posts</p>

@@ -13,7 +13,7 @@ export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>(blogPosts);
 
   useEffect(() => {
-    setPosts(loadBlogPosts());
+    loadBlogPosts().then(setPosts).catch(() => setPosts(blogPosts));
   }, []);
 
   const featuredPost = useMemo(
