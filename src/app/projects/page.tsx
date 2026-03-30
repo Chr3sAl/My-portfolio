@@ -12,7 +12,7 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>(defaultProjects);
 
   useEffect(() => {
-    setProjects(loadProjects());
+    loadProjects().then(setProjects).catch(() => setProjects(defaultProjects));
   }, []);
 
   return (

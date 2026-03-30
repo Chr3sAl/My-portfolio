@@ -39,7 +39,7 @@ export default function ProjectDetailPage() {
   const [projects, setProjects] = useState<Project[]>(defaultProjects);
 
   useEffect(() => {
-    setProjects(loadProjects());
+    loadProjects().then(setProjects).catch(() => setProjects(defaultProjects));
   }, []);
 
   const project = useMemo(
